@@ -27,7 +27,7 @@ gem install philiprehberger-maybe
 ## Usage
 
 ```ruby
-require 'philiprehberger/maybe'
+require "philiprehberger/maybe"
 
 result = Philiprehberger::Maybe.wrap(42)
 result.value  # => 42

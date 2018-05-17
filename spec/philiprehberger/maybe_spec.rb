@@ -98,13 +98,13 @@ RSpec.describe Philiprehberger::Maybe do
 
       it 'returns None for missing keys' do
         some = described_class.new({ a: 1 })
-        result = some.dig(:b)
+        result = some[:b]
         expect(result).to be_a(Philiprehberger::Maybe::None)
       end
 
       it 'digs into arrays' do
         some = described_class.new([10, 20, 30])
-        result = some.dig(1)
+        result = some[1]
         expect(result.value).to eq(20)
       end
     end
@@ -188,7 +188,7 @@ RSpec.describe Philiprehberger::Maybe do
     describe '#dig' do
       it 'returns None for non-diggable values' do
         some = described_class.new('hello')
-        result = some.dig(:length)
+        result = some[:length]
         expect(result).to be_a(Philiprehberger::Maybe::None)
       end
 
@@ -200,13 +200,13 @@ RSpec.describe Philiprehberger::Maybe do
 
       it 'returns None for out-of-bounds array index' do
         some = described_class.new([1, 2, 3])
-        result = some.dig(10)
+        result = some[10]
         expect(result).to be_a(Philiprehberger::Maybe::None)
       end
 
       it 'handles single key dig into hash' do
         some = described_class.new({ x: 99 })
-        result = some.dig(:x)
+        result = some[:x]
         expect(result.value).to eq(99)
       end
     end
@@ -222,7 +222,7 @@ RSpec.describe Philiprehberger::Maybe do
       subject(:some_false) { described_class.new(false) }
 
       it 'maps over false' do
-        result = some_false.map { |v| !v }
+        result = some_false.map(&:!)
         expect(result.value).to eq(true)
       end
 
@@ -337,7 +337,7 @@ RSpec.describe Philiprehberger::Maybe do
 
     describe '#map' do
       it 'returns a Some when block returns a non-nil value' do
-        result = some.map { |v| v.to_s }
+        result = some.map(&:to_s)
         expect(result).to be_a(described_class)
         expect(result.value).to eq('42')
       end
@@ -379,7 +379,7 @@ RSpec.describe Philiprehberger::Maybe do
 
       it 'returns None when array contains nil at index' do
         some = described_class.new([nil, 2])
-        result = some.dig(0)
+        result = some[0]
         expect(result).to be_a(Philiprehberger::Maybe::None)
       end
     end
@@ -410,7 +410,7 @@ RSpec.describe Philiprehberger::Maybe do
       subject(:some_sym) { described_class.new(:active) }
 
       it 'maps over a symbol' do
-        result = some_sym.map { |v| v.to_s }
+        result = some_sym.map(&:to_s)
         expect(result.value).to eq('active')
       end
 
@@ -505,7 +505,7 @@ RSpec.describe Philiprehberger::Maybe do
 
     describe '#dig' do
       it 'returns None' do
-        expect(none.dig(:a)).to be_a(described_class)
+        expect(none[:a]).to be_a(described_class)
       end
     end
 

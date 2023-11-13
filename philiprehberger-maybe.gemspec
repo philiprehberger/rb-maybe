@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = 'Optional/Maybe monad with safe chaining and pattern matching'
   spec.description = 'A Maybe/Optional type for Ruby providing Some and None containers with safe chaining, ' \
-                       'pattern matching via deconstruct_keys, filtering, and value extraction.'
+                     'pattern matching via deconstruct_keys, filtering, and value extraction.'
   spec.homepage = 'https://philiprehberger.com/open-source-packages/ruby/philiprehberger-maybe'
   spec.license = 'MIT'
 

@@ -420,6 +420,59 @@ RSpec.describe Philiprehberger::Maybe do
       end
     end
 
+    describe '#zip' do
+      it 'combines all Some values into an array' do
+        a = described_class.new(1)
+        b = described_class.new(2)
+        c = described_class.new(3)
+        result = a.zip(b, c)
+        expect(result).to be_a(described_class)
+        expect(result.value).to eq([1, 2, 3])
+      end
+
+      it 'returns None if any argument is None' do
+        a = described_class.new(1)
+        b = Philiprehberger::Maybe::None.instance
+        c = described_class.new(3)
+        result = a.zip(b, c)
+        expect(result).to be_a(Philiprehberger::Maybe::None)
+      end
+
+      it 'returns Some with single-element array when called with no arguments' do
+        result = some.zip
+        expect(result.value).to eq([42])
+      end
+    end
+
+    describe '#tap' do
+      it 'executes block for side effects' do
+        side_effect = nil
+        result = some.tap { |v| side_effect = v }
+        expect(side_effect).to eq(42)
+        expect(result).to be(some)
+      end
+
+      it 'returns self unchanged' do
+        expect(some.tap { |_v| }).to be(some)
+      end
+    end
+
+    describe 'Enumerable' do
+      it 'supports to_a' do
+        expect(some.to_a).to eq([42])
+      end
+
+      it 'supports select' do
+        result = described_class.new(5).select { |v| v > 3 }
+        expect(result).to eq([5])
+      end
+
+      it 'supports select returning empty for non-matching' do
+        result = described_class.new(1).select { |v| v > 3 }
+        expect(result).to eq([])
+      end
+    end
+
     describe 'pattern matching' do
       it 'distinguishes Some from None in a case expression' do
         values = [described_class.new(1), Philiprehberger::Maybe::None.instance, described_class.new(2)]
@@ -629,6 +682,59 @@ RSpec.describe Philiprehberger::Maybe do
       end
     end
 
+    describe '#recover' do
+      it 'converts None to Some via block' do
+        result = none.recover { 42 }
+        expect(result).to be_a(Philiprehberger::Maybe::Some)
+        expect(result.value).to eq(42)
+      end
+
+      it 'returns None when block returns nil' do
+        result = none.recover { nil }
+        expect(result).to be_a(described_class)
+      end
+    end
+
+    describe '#zip' do
+      it 'always returns None' do
+        a = Philiprehberger::Maybe::Some.new(1)
+        result = none.zip(a)
+        expect(result).to be_a(described_class)
+      end
+
+      it 'returns None with all None arguments' do
+        result = none.zip(none, none)
+        expect(result).to be_a(described_class)
+      end
+
+      it 'returns None with no arguments' do
+        expect(none.zip).to be_a(described_class)
+      end
+    end
+
+    describe '#tap' do
+      it 'does not execute the block' do
+        called = false
+        none.tap { called = true }
+        expect(called).to be(false)
+      end
+
+      it 'returns self' do
+        expect(none.tap {}).to be(none)
+      end
+    end
+
+    describe 'Enumerable' do
+      it 'supports to_a returning empty array' do
+        expect(none.to_a).to eq([])
+      end
+
+      it 'supports select returning empty array' do
+        result = none.select { |_v| true }
+        expect(result).to eq([])
+      end
+    end
+
     describe 'pattern matching' do
       it 'matches None with in pattern' do
         result = case none
@@ -647,6 +753,52 @@ RSpec.describe Philiprehberger::Maybe do
                  end
         expect(result).to eq(:none)
       end
+    end
+  end
+
+  describe '.all?' do
+    it 'returns true when all are Some' do
+      a = Philiprehberger::Maybe.wrap(1)
+      b = Philiprehberger::Maybe.wrap(2)
+      expect(Philiprehberger::Maybe.all?(a, b)).to be(true)
+    end
+
+    it 'returns false when any is None' do
+      a = Philiprehberger::Maybe.wrap(1)
+      b = Philiprehberger::Maybe.wrap(nil)
+      expect(Philiprehberger::Maybe.all?(a, b)).to be(false)
+    end
+
+    it 'returns true with no arguments' do
+      expect(Philiprehberger::Maybe.all?).to be(true)
+    end
+
+    it 'returns false when all are None' do
+      a = Philiprehberger::Maybe::None.instance
+      b = Philiprehberger::Maybe::None.instance
+      expect(Philiprehberger::Maybe.all?(a, b)).to be(false)
+    end
+  end
+
+  describe '.first_some' do
+    it 'returns the first Some' do
+      a = Philiprehberger::Maybe::None.instance
+      b = Philiprehberger::Maybe.wrap(42)
+      c = Philiprehberger::Maybe.wrap(99)
+      result = Philiprehberger::Maybe.first_some(a, b, c)
+      expect(result).to be_a(Philiprehberger::Maybe::Some)
+      expect(result.value).to eq(42)
+    end
+
+    it 'returns None when all are None' do
+      a = Philiprehberger::Maybe::None.instance
+      b = Philiprehberger::Maybe::None.instance
+      result = Philiprehberger::Maybe.first_some(a, b)
+      expect(result).to be_a(Philiprehberger::Maybe::None)
+    end
+
+    it 'returns None with no arguments' do
+      expect(Philiprehberger::Maybe.first_some).to be_a(Philiprehberger::Maybe::None)
     end
   end
 

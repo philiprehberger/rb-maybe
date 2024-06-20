@@ -19,8 +19,26 @@ module Philiprehberger
       end
     end
 
+    # Check if all arguments are Some
+    #
+    # @param maybes [Array<Some, None>] the Maybe values to check
+    # @return [Boolean] true if all are Some
+    def self.all?(*maybes)
+      maybes.all?(&:some?)
+    end
+
+    # Return the first Some from the arguments, or None if all are None
+    #
+    # @param maybes [Array<Some, None>] the Maybe values to search
+    # @return [Some, None] the first Some, or None
+    def self.first_some(*maybes)
+      maybes.find(&:some?) || None.instance
+    end
+
     # Container for a present value
     class Some
+      include Enumerable
+
       # @param value [Object] the wrapped value
       def initialize(value)
         @value = value
@@ -28,6 +46,17 @@ module Philiprehberger
 
       # @return [Object] the wrapped value
       attr_reader :value
+
+      # Yield the wrapped value for Enumerable support
+      #
+      # @yield [value] the wrapped value
+      # @return [Enumerator, self]
+      def each(&block)
+        return to_enum(:each) unless block
+
+        block.call(@value)
+        self
+      end
 
       # @return [Boolean] true
       def some?
@@ -128,12 +157,45 @@ module Philiprehberger
         dig(key)
       end
 
+      # Combine multiple Maybes into a single Maybe of an array
+      #
+      # @param others [Array<Some, None>] other Maybe values
+      # @return [Some, None] Some with array of values if all are Some, None otherwise
+      def zip(*others)
+        values = [@value]
+        others.each do |other|
+          return None.instance if other.none?
+
+          values << other.value
+        end
+        Some.new(values)
+      end
+
+      # Execute a block for side effects, returning self unchanged
+      #
+      # @yield [value] the block to execute
+      # @return [Some] self
+      def tap(&block)
+        block.call(@value)
+        self
+      end
+
       alias to_s inspect
     end
 
     # Represents an absent value
     class None
       include Singleton
+      include Enumerable
+
+      # Yield nothing for Enumerable support
+      #
+      # @return [Enumerator, self]
+      def each(&block)
+        return to_enum(:each) unless block
+
+        self
+      end
 
       # @return [nil] always nil
       def value
@@ -211,6 +273,28 @@ module Philiprehberger
       # @return [Hash] the deconstructed hash
       def deconstruct_keys(_keys)
         { value: nil, some: false, none: true }
+      end
+
+      # Convert None to Some via a block
+      #
+      # @yield the block providing a recovery value
+      # @return [Some, None] the recovered Maybe
+      def recover(&block)
+        Maybe.wrap(block.call)
+      end
+
+      # Combine with other Maybes — always returns None
+      #
+      # @return [None] self
+      def zip(*)
+        self
+      end
+
+      # No-op tap, returns self
+      #
+      # @return [None] self
+      def tap
+        self
       end
 
       # @return [Boolean] equality check

@@ -15,7 +15,7 @@ Optional/Maybe monad with safe chaining and pattern matching
 Add to your Gemfile:
 
 ```ruby
-gem 'philiprehberger-maybe'
+gem "philiprehberger-maybe"
 ```
 
 Or install directly:

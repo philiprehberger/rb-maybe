@@ -120,6 +120,14 @@ module Philiprehberger
         "Some(#{@value.inspect})"
       end
 
+      # Access a single key (shorthand for dig)
+      #
+      # @param key [Object] the key to access
+      # @return [Some, None] the result of digging with a single key
+      def [](key)
+        dig(key)
+      end
+
       alias to_s inspect
     end
 
@@ -186,6 +194,14 @@ module Philiprehberger
       #
       # @return [None] self
       def dig(*)
+        self
+      end
+
+      # Access a single key (shorthand for dig)
+      #
+      # @param _key [Object] the key to access
+      # @return [None] self
+      def [](_key)
         self
       end
 

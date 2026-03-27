@@ -315,7 +315,7 @@ RSpec.describe Philiprehberger::Maybe do
       end
 
       it 'represents hash values' do
-        expect(described_class.new({ a: 1 }).inspect).to eq('Some({a: 1})')
+        expect(described_class.new({ a: 1 }).inspect).to eq("Some(#{({ a: 1 }).inspect})")
       end
 
       it 'represents nil-containing Some (via new, not wrap)' do

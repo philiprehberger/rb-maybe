@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-03
+
+### Added
+- `Some#zip(*others)` to combine multiple Maybes into a single Some of an array
+- `Some#tap(&block)` to execute side effects without changing the value
+- `None#recover(&block)` to convert None to Some via a recovery block
+- `None#zip(*others)` returns None (consistent with Some#zip)
+- `None#tap(&block)` no-op returning self
+- `Enumerable` support on both Some and None (enables `to_a`, `select`, etc.)
+- `Maybe.all?(*maybes)` to check if all arguments are Some
+- `Maybe.first_some(*maybes)` to return the first Some or None
+
 ## [0.1.7] - 2026-03-31
 
 ### Added

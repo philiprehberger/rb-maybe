@@ -83,6 +83,55 @@ Philiprehberger::Maybe.wrap(5)
   .value  # => 5
 ```
 
+### Combining with Zip
+
+```ruby
+a = Philiprehberger::Maybe.wrap(1)
+b = Philiprehberger::Maybe.wrap(2)
+a.zip(b).value  # => [1, 2]
+
+c = Philiprehberger::Maybe.wrap(nil)
+a.zip(c).none?  # => true
+```
+
+### Recovery
+
+```ruby
+Philiprehberger::Maybe.wrap(nil)
+  .recover { 'default' }
+  .value  # => 'default'
+```
+
+### Side Effects with Tap
+
+```ruby
+Philiprehberger::Maybe.wrap(42)
+  .tap { |v| puts "Got: #{v}" }
+  .map { |v| v * 2 }
+  .value  # => 84
+```
+
+### Enumerable Support
+
+```ruby
+Philiprehberger::Maybe.wrap(42).to_a     # => [42]
+Philiprehberger::Maybe.wrap(nil).to_a    # => []
+
+Philiprehberger::Maybe.wrap(5)
+  .select { |v| v > 3 }  # => [5]
+```
+
+### Utility Methods
+
+```ruby
+a = Philiprehberger::Maybe.wrap(1)
+b = Philiprehberger::Maybe.wrap(2)
+Philiprehberger::Maybe.all?(a, b)        # => true
+
+c = Philiprehberger::Maybe.wrap(nil)
+Philiprehberger::Maybe.first_some(c, a)  # => Some(1)
+```
+
 ## API
 
 ### `Maybe`
@@ -90,6 +139,8 @@ Philiprehberger::Maybe.wrap(5)
 | Method | Description |
 |--------|-------------|
 | `.wrap(value)` | Wrap a value in Some (non-nil) or None (nil) |
+| `.all?(*maybes)` | Return true if all arguments are Some |
+| `.first_some(*maybes)` | Return the first Some, or None if all are None |
 
 ### `Maybe::Some`
 
@@ -104,6 +155,9 @@ Philiprehberger::Maybe.wrap(5)
 | `#or_else(default)` | Return self (ignores default) |
 | `#or_raise(error, msg)` | Return the value |
 | `#dig(*keys)` | Dig into nested hashes/arrays |
+| `#zip(*others)` | Combine Maybes; Some array if all Some, else None |
+| `#tap { \|v\| }` | Execute block for side effects, return self |
+| `#each { \|v\| }` | Yield the value (Enumerable support) |
 | `#deconstruct_keys(keys)` | Pattern matching support |
 
 ### `Maybe::None`
@@ -119,6 +173,10 @@ Philiprehberger::Maybe.wrap(5)
 | `#or_else(default)` | Return default wrapped in Maybe |
 | `#or_raise(error, msg)` | Raise the specified error |
 | `#dig(*keys)` | Return None |
+| `#recover { }` | Convert None to Some via block |
+| `#zip(*others)` | Return None (always) |
+| `#tap { \|v\| }` | No-op, return self |
+| `#each { \|v\| }` | Yield nothing (Enumerable support) |
 | `#deconstruct_keys(keys)` | Pattern matching support |
 
 ## Development

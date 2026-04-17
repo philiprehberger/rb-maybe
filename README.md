@@ -132,6 +132,37 @@ c = Philiprehberger::Maybe.wrap(nil)
 Philiprehberger::Maybe.first_some(c, a)  # => Some(1)
 ```
 
+### Constructing from Conditions
+
+```ruby
+Philiprehberger::Maybe.from_bool(user.admin?, user)
+# => Some(user) when admin, None otherwise
+
+Philiprehberger::Maybe.from_bool(cache.valid?) { cache.fetch }
+# => Some(value) if the gate passes, None otherwise (block only runs when truthy)
+
+Philiprehberger::Maybe.try { JSON.parse(input) }
+# => Some(parsed) on success, None on any StandardError
+
+Philiprehberger::Maybe.try(KeyError) { ENV.fetch('MISSING') }
+# => None — only KeyError is caught; other exceptions propagate
+```
+
+### Rejecting Values
+
+```ruby
+Philiprehberger::Maybe.wrap(user)
+  .reject(&:deleted?)
+  .value  # => nil when user.deleted?, user otherwise
+```
+
+### Flattening Nested Maybes
+
+```ruby
+outer = Philiprehberger::Maybe.wrap(Philiprehberger::Maybe.wrap(42))
+outer.flatten.value  # => 42
+```
+
 ## API
 
 ### `Maybe`
@@ -141,6 +172,8 @@ Philiprehberger::Maybe.first_some(c, a)  # => Some(1)
 | `.wrap(value)` | Wrap a value in Some (non-nil) or None (nil) |
 | `.all?(*maybes)` | Return true if all arguments are Some |
 | `.first_some(*maybes)` | Return the first Some, or None if all are None |
+| `.from_bool(condition, value = nil, &block)` | Some when condition is truthy (and value/block result is non-nil), else None |
+| `.try(*error_classes, &block)` | Run block; return Some on success, None on caught errors or nil (defaults to StandardError) |
 
 ### `Maybe::Some`
 
@@ -152,6 +185,10 @@ Philiprehberger::Maybe.first_some(c, a)  # => Some(1)
 | `#map { \|v\| }` | Transform the value, returning a new Maybe |
 | `#flat_map { \|v\| }` | Transform expecting a Maybe return |
 | `#filter { \|v\| }` | Return None if predicate is false |
+| `#reject { \|v\| }` | Return None if predicate is true (inverse of filter) |
+| `#flatten` | Flatten one level — Some(Some(x)) → Some(x), Some(None) → None |
+| `#contains?(value)` | True if the wrapped value equals the argument |
+| `#present?` | Return true (alias for `#some?`) |
 | `#or_else(default)` | Return self (ignores default) |
 | `#or_raise(error, msg)` | Return the value |
 | `#dig(*keys)` | Dig into nested hashes/arrays |
@@ -170,6 +207,10 @@ Philiprehberger::Maybe.first_some(c, a)  # => Some(1)
 | `#map { \|v\| }` | Return None (no-op) |
 | `#flat_map { \|v\| }` | Return None (no-op) |
 | `#filter { \|v\| }` | Return None (no-op) |
+| `#reject { \|v\| }` | Return None (no-op) |
+| `#flatten` | Return None (no-op) |
+| `#contains?(value)` | Always false |
+| `#present?` | Return false (alias for `#some?`) |
 | `#or_else(default)` | Return default wrapped in Maybe |
 | `#or_raise(error, msg)` | Raise the specified error |
 | `#dig(*keys)` | Return None |

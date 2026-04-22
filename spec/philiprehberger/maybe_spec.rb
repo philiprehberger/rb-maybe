@@ -812,4 +812,173 @@ RSpec.describe Philiprehberger::Maybe do
       expect(error.message).to eq('test error')
     end
   end
+
+  describe '.from_bool' do
+    it 'returns Some with value when condition is truthy' do
+      result = described_class.from_bool(true, 42)
+      expect(result).to be_a(described_class::Some)
+      expect(result.value).to eq(42)
+    end
+
+    it 'returns None when condition is false' do
+      result = described_class.from_bool(false, 42)
+      expect(result).to be_a(described_class::None)
+    end
+
+    it 'returns None when condition is nil' do
+      result = described_class.from_bool(nil, 42)
+      expect(result).to be_a(described_class::None)
+    end
+
+    it 'invokes the block when condition is truthy' do
+      result = described_class.from_bool(true) { 99 }
+      expect(result.value).to eq(99)
+    end
+
+    it 'does not invoke the block when condition is falsy' do
+      called = false
+      described_class.from_bool(false) { called = true }
+      expect(called).to be(false)
+    end
+
+    it 'returns None when condition is truthy but value is nil' do
+      result = described_class.from_bool(true, nil)
+      expect(result).to be_a(described_class::None)
+    end
+
+    it 'returns None when condition is truthy but block returns nil' do
+      result = described_class.from_bool(true) { nil }
+      expect(result).to be_a(described_class::None)
+    end
+
+    it 'treats non-nil/non-false conditions as truthy' do
+      result = described_class.from_bool(0, 'x')
+      expect(result.value).to eq('x')
+    end
+  end
+
+  describe '.try' do
+    it 'returns Some when block succeeds' do
+      result = described_class.try { 42 }
+      expect(result).to be_a(described_class::Some)
+      expect(result.value).to eq(42)
+    end
+
+    it 'returns None when block raises StandardError' do
+      result = described_class.try { raise 'boom' }
+      expect(result).to be_a(described_class::None)
+    end
+
+    it 'returns None when block returns nil' do
+      result = described_class.try { nil }
+      expect(result).to be_a(described_class::None)
+    end
+
+    it 'catches only specified error classes' do
+      result = described_class.try(KeyError) { raise KeyError, 'missing' }
+      expect(result).to be_a(described_class::None)
+    end
+
+    it 'propagates exceptions not in the specified list' do
+      expect { described_class.try(KeyError) { raise ArgumentError, 'nope' } }.to raise_error(ArgumentError)
+    end
+
+    it 'does not catch non-StandardError exceptions by default' do
+      expect { described_class.try { raise NotImplementedError, 'not yet' } }.to raise_error(NotImplementedError)
+    end
+  end
+
+  describe 'Some#reject' do
+    subject(:some) { Philiprehberger::Maybe::Some.new(42) }
+
+    it 'returns None when predicate is truthy' do
+      result = some.reject { |v| v > 10 }
+      expect(result).to be_a(Philiprehberger::Maybe::None)
+    end
+
+    it 'returns self when predicate is falsy' do
+      result = some.reject { |v| v > 100 }
+      expect(result).to be(some)
+    end
+  end
+
+  describe 'None#reject' do
+    subject(:none) { Philiprehberger::Maybe::None.instance }
+
+    it 'returns self' do
+      expect(none.reject).to be(none)
+    end
+
+    it 'does not invoke the block' do
+      called = false
+      none.reject { called = true }
+      expect(called).to be(false)
+    end
+  end
+
+  describe 'Some#flatten' do
+    it 'flattens Some(Some(x)) to Some(x)' do
+      inner = Philiprehberger::Maybe::Some.new(42)
+      outer = Philiprehberger::Maybe::Some.new(inner)
+      expect(outer.flatten).to be(inner)
+    end
+
+    it 'flattens Some(None) to None' do
+      outer = Philiprehberger::Maybe::Some.new(Philiprehberger::Maybe::None.instance)
+      expect(outer.flatten).to be_a(Philiprehberger::Maybe::None)
+    end
+
+    it 'returns self when the value is not a Maybe' do
+      some = Philiprehberger::Maybe::Some.new(42)
+      expect(some.flatten).to be(some)
+    end
+
+    it 'flattens only one level' do
+      innermost = Philiprehberger::Maybe::Some.new(1)
+      middle = Philiprehberger::Maybe::Some.new(innermost)
+      outer = Philiprehberger::Maybe::Some.new(middle)
+      expect(outer.flatten).to be(middle)
+    end
+  end
+
+  describe 'None#flatten' do
+    it 'returns self' do
+      none = Philiprehberger::Maybe::None.instance
+      expect(none.flatten).to be(none)
+    end
+  end
+
+  describe 'Some#contains?' do
+    it 'returns true when the wrapped value equals the argument' do
+      expect(Philiprehberger::Maybe::Some.new(42).contains?(42)).to be(true)
+    end
+
+    it 'returns false when the values differ' do
+      expect(Philiprehberger::Maybe::Some.new(42).contains?(99)).to be(false)
+    end
+
+    it 'compares by value, not identity' do
+      expect(Philiprehberger::Maybe::Some.new('hello').contains?('hello')).to be(true)
+    end
+  end
+
+  describe 'None#contains?' do
+    it 'is always false' do
+      expect(Philiprehberger::Maybe::None.instance.contains?(42)).to be(false)
+    end
+
+    it 'is false even for nil' do
+      expect(Philiprehberger::Maybe::None.instance.contains?(nil)).to be(false)
+    end
+  end
+
+  describe '#present?' do
+    it 'is true for Some' do
+      expect(Philiprehberger::Maybe::Some.new(42).present?).to be(true)
+    end
+
+    it 'is false for None' do
+      expect(Philiprehberger::Maybe::None.instance.present?).to be(false)
+    end
+  end
 end

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-17
+
+### Added
+- `Maybe.from_bool(condition, value = nil, &block)` to build a Maybe from a boolean gate
+- `Maybe.try(*error_classes, &block)` to run a block, returning None on caught errors or nil (defaults to StandardError)
+- `Some#reject(&block)` / `None#reject(&block)` as the inverse of `#filter`
+- `Some#flatten` / `None#flatten` to flatten one level of Maybe nesting
+- `Some#contains?(value)` / `None#contains?(value)` for value-equality checks
+- `Some#present?` / `None#present?` as Rails-style aliases for `#some?`
+
 ## [0.2.1] - 2026-04-15
 
 ### Changed

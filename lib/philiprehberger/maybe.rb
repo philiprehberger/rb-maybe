@@ -35,6 +35,33 @@ module Philiprehberger
       maybes.find(&:some?) || None.instance
     end
 
+    # Build a Maybe from a boolean gate
+    #
+    # If condition is truthy, wraps the given value (or the block's result if a block is provided).
+    # If condition is falsy, returns None and the block is never invoked.
+    #
+    # @param condition [Object] truthy/falsy gate
+    # @param value [Object] value to wrap when condition is truthy and no block is given
+    # @yield optional block producing the value when condition is truthy
+    # @return [Some, None] Some when the condition passes (and the value/block result is non-nil), None otherwise
+    def self.from_bool(condition, value = nil, &block)
+      return None.instance unless condition
+
+      wrap(block ? block.call : value)
+    end
+
+    # Execute a block, converting raised exceptions and nil results into None
+    #
+    # @param error_classes [Array<Class>] exception classes to catch (defaults to StandardError)
+    # @yield the block to execute
+    # @return [Some, None] Some wrapping a non-nil result, or None if the block raises a caught exception or returns nil
+    def self.try(*error_classes, &block)
+      error_classes = [StandardError] if error_classes.empty?
+      wrap(block.call)
+    rescue *error_classes
+      None.instance
+    end
+
     # Container for a present value
     class Some
       include Enumerable
@@ -180,6 +207,45 @@ module Philiprehberger
         self
       end
 
+      # Inverse of #filter — return None when the predicate is truthy
+      #
+      # @yield [value] the predicate block
+      # @return [Some, None] None if predicate is true, self otherwise
+      def reject(&block)
+        if block.call(@value)
+          None.instance
+        else
+          self
+        end
+      end
+
+      # Flatten a single level of Maybe nesting
+      #
+      # Some(Some(x)) becomes Some(x); Some(None) becomes None; Some(x) is unchanged.
+      #
+      # @return [Some, None] the flattened Maybe
+      def flatten
+        case @value
+        when Some, None then @value
+        else self
+        end
+      end
+
+      # Check whether the wrapped value equals the given value
+      #
+      # @param value [Object] the value to compare against
+      # @return [Boolean] true if the wrapped value equals the argument
+      def contains?(value)
+        @value == value
+      end
+
+      # Alias for #some? — matches Rails-style naming
+      #
+      # @return [Boolean] true
+      def present?
+        true
+      end
+
       alias to_s inspect
     end
 
@@ -295,6 +361,35 @@ module Philiprehberger
       # @return [None] self
       def tap
         self
+      end
+
+      # No-op reject, returns self
+      #
+      # @return [None] self
+      def reject
+        self
+      end
+
+      # Flatten a None — returns self
+      #
+      # @return [None] self
+      def flatten
+        self
+      end
+
+      # None never contains anything
+      #
+      # @param _value [Object] ignored
+      # @return [Boolean] false
+      def contains?(_value)
+        false
+      end
+
+      # Alias for #some? — matches Rails-style naming
+      #
+      # @return [Boolean] false
+      def present?
+        false
       end
 
       # @return [Boolean] equality check

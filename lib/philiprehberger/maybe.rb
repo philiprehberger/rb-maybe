@@ -246,6 +246,21 @@ module Philiprehberger
         true
       end
 
+      # Explicit case handling: invokes the `some:` proc with the wrapped value.
+      #
+      # Cleaner than pattern matching for one-off transforms; both branches
+      # must be supplied so the call site is exhaustive.
+      #
+      # @param some [#call] called with the wrapped value
+      # @param none [#call] called with no arguments (ignored for Some)
+      # @return [Object] the result of `some.call(value)`
+      # @raise [ArgumentError] if either keyword is missing
+      def fold(some:, none:)
+        raise ArgumentError, 'some: and none: are required' if some.nil? || none.nil?
+
+        some.call(@value)
+      end
+
       alias to_s inspect
     end
 
@@ -390,6 +405,18 @@ module Philiprehberger
       # @return [Boolean] false
       def present?
         false
+      end
+
+      # Explicit case handling: invokes the `none:` proc with no arguments.
+      #
+      # @param some [#call] called with the wrapped value (ignored for None)
+      # @param none [#call] called with no arguments
+      # @return [Object] the result of `none.call`
+      # @raise [ArgumentError] if either keyword is missing
+      def fold(some:, none:)
+        raise ArgumentError, 'some: and none: are required' if some.nil? || none.nil?
+
+        none.call
       end
 
       # @return [Boolean] equality check

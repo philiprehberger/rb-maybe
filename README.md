@@ -102,6 +102,17 @@ Philiprehberger::Maybe.wrap(nil)
   .value  # => 'default'
 ```
 
+### Folding to a Concrete Value
+
+```ruby
+greeting = Philiprehberger::Maybe.wrap(user).fold(
+  some: ->(u) { "Hi, #{u.name}" },
+  none: -> { 'Hello, stranger' }
+)
+```
+
+Both `some:` and `none:` are required keywords, so the call site is exhaustive.
+
 ### Side Effects with Tap
 
 ```ruby
@@ -195,6 +206,7 @@ outer.flatten.value  # => 42
 | `#zip(*others)` | Combine Maybes; Some array if all Some, else None |
 | `#tap { \|v\| }` | Execute block for side effects, return self |
 | `#each { \|v\| }` | Yield the value (Enumerable support) |
+| `#fold(some:, none:)` | Call `some.call(value)`; both kwargs required |
 | `#deconstruct_keys(keys)` | Pattern matching support |
 
 ### `Maybe::None`
@@ -218,6 +230,7 @@ outer.flatten.value  # => 42
 | `#zip(*others)` | Return None (always) |
 | `#tap { \|v\| }` | No-op, return self |
 | `#each { \|v\| }` | Yield nothing (Enumerable support) |
+| `#fold(some:, none:)` | Call `none.call`; both kwargs required |
 | `#deconstruct_keys(keys)` | Pattern matching support |
 
 ## Development

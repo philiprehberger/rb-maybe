@@ -981,4 +981,42 @@ RSpec.describe Philiprehberger::Maybe do
       expect(Philiprehberger::Maybe::None.instance.present?).to be(false)
     end
   end
+
+  describe '#fold' do
+    it 'invokes the some: proc with the value when Some' do
+      result = Philiprehberger::Maybe::Some.new(7).fold(
+        some: ->(v) { v * 2 },
+        none: -> { -1 }
+      )
+      expect(result).to eq(14)
+    end
+
+    it 'invokes the none: proc with no args when None' do
+      result = Philiprehberger::Maybe::None.instance.fold(
+        some: ->(v) { v * 2 },
+        none: -> { 'absent' }
+      )
+      expect(result).to eq('absent')
+    end
+
+    it 'works through Maybe.wrap to handle nil naturally' do
+      msg = Philiprehberger::Maybe.wrap(nil).fold(
+        some: ->(v) { "got #{v}" },
+        none: -> { 'nothing' }
+      )
+      expect(msg).to eq('nothing')
+    end
+
+    it 'raises ArgumentError when some: is nil on Some' do
+      expect do
+        Philiprehberger::Maybe::Some.new(1).fold(some: nil, none: -> {})
+      end.to raise_error(ArgumentError, /some: and none: are required/)
+    end
+
+    it 'raises ArgumentError when none: is nil on None' do
+      expect do
+        Philiprehberger::Maybe::None.instance.fold(some: ->(_) {}, none: nil)
+      end.to raise_error(ArgumentError, /some: and none: are required/)
+    end
+  end
 end

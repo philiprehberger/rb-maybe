@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-08
+
+### Added
+- `Some#fold(some:, none:)` / `None#fold(some:, none:)` — explicit case handling that runs `some:` with the wrapped value or `none:` with no args, returning whichever proc's result. Cleaner than pattern matching for one-off transforms; both keywords are required.
+
 ## [0.3.0] - 2026-04-17
 
 ### Added

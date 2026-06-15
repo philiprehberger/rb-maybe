@@ -4,6 +4,8 @@
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-maybe.svg)](https://rubygems.org/gems/philiprehberger-maybe)
 [![Last updated](https://img.shields.io/github/last-commit/philiprehberger/rb-maybe)](https://github.com/philiprehberger/rb-maybe/commits/main)
 
+![philiprehberger-maybe](https://raw.githubusercontent.com/philiprehberger/rb-maybe/main/package-card.webp)
+
 Optional/Maybe monad with safe chaining and pattern matching
 
 ## Requirements
@@ -174,6 +176,14 @@ outer = Philiprehberger::Maybe.wrap(Philiprehberger::Maybe.wrap(42))
 outer.flatten.value  # => 42
 ```
 
+### Lifting Callables
+
+```ruby
+safe_parse = Philiprehberger::Maybe.lift { |s| Integer(s, exception: false) }
+safe_parse.call('42')   # => Some(42)
+safe_parse.call('abc')  # => None
+```
+
 ## API
 
 ### `Maybe`
@@ -185,6 +195,7 @@ outer.flatten.value  # => 42
 | `.first_some(*maybes)` | Return the first Some, or None if all are None |
 | `.from_bool(condition, value = nil, &block)` | Some when condition is truthy (and value/block result is non-nil), else None |
 | `.try(*error_classes, &block)` | Run block; return Some on success, None on caught errors or nil (defaults to StandardError) |
+| `.lift(&block)` | Return a Proc that wraps the block's result in Some/None |
 
 ### `Maybe::Some`
 

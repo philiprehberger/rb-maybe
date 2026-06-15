@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-14
+
+### Added
+- `Maybe.lift(&block)` — convert any block into a Maybe-returning Proc. Wraps the block's result in `Maybe.wrap` so existing nil-returning helpers can join a Maybe pipeline without manual wrapping at every call site.
+
 ## [0.4.0] - 2026-05-08
 
 ### Added

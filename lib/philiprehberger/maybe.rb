@@ -62,6 +62,21 @@ module Philiprehberger
       None.instance
     end
 
+    # Lift a plain callable into a Maybe-returning callable.
+    #
+    # Takes a block (or callable) and returns a Proc that wraps the block's
+    # result in `Maybe.wrap`. Useful for adapting existing nil-returning Ruby
+    # methods into the Maybe pipeline without manually wrapping each call site.
+    #
+    # @yield arguments forwarded to the block; the block's return value is wrapped
+    # @return [Proc] a Proc that returns Some or None
+    # @raise [Error] if no block is given
+    def self.lift(&block)
+      raise Error, 'block is required' unless block
+
+      ->(*args, **kwargs) { wrap(block.call(*args, **kwargs)) }
+    end
+
     # Container for a present value
     class Some
       include Enumerable

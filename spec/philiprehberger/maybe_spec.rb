@@ -888,6 +888,35 @@ RSpec.describe Philiprehberger::Maybe do
     end
   end
 
+  describe '.lift' do
+    it 'returns a Proc' do
+      lifted = described_class.lift { |x| x }
+      expect(lifted).to be_a(Proc)
+    end
+
+    it 'wraps a non-nil result in Some' do
+      lifted = described_class.lift { |x| x * 2 }
+      result = lifted.call(21)
+      expect(result).to be_a(described_class::Some)
+      expect(result.value).to eq(42)
+    end
+
+    it 'wraps a nil result in None' do
+      lifted = described_class.lift { |_x| nil }
+      expect(lifted.call(:anything)).to be_a(described_class::None)
+    end
+
+    it 'forwards positional and keyword arguments' do
+      lifted = described_class.lift { |a, b, c:| [a, b, c] }
+      result = lifted.call(1, 2, c: 3)
+      expect(result.value).to eq([1, 2, 3])
+    end
+
+    it 'raises when no block is given' do
+      expect { described_class.lift }.to raise_error(described_class::Error, /block is required/)
+    end
+  end
+
   describe 'Some#reject' do
     subject(:some) { Philiprehberger::Maybe::Some.new(42) }
 
